@@ -60,7 +60,7 @@ export class WebScraper {
       await this.waitForPageLoad(page);
       return page;
     } catch (e) {
-      await page.close();
+      if (page) await page.close();
       if (this.context) {
         await this.context.close();
         this.context = null;
@@ -87,6 +87,15 @@ export class WebScraper {
       const userName = await page.innerText(`xpath=${USER_NAME_LOGGED}`);
       return new User(userName, studentCode, password);
     } catch (e) {
+      if (page) await page.close();
+      if (this.context) {
+        await this.context.close();
+        this.context = null;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
       throw new Error("Thông tin đăng nhập của sinh viên không đúng");
     } finally {
       if (page) await page.close();
@@ -136,6 +145,17 @@ export class WebScraper {
       schedule.schedules = schedules;
 
       return schedule;
+    } catch (e) {
+      if (page) await page.close();
+      if (this.context) {
+        await this.context.close();
+        this.context = null;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
+      throw new Error("Thông tin đăng nhập của sinh viên không đúng");
     } finally {
       if (page) await page.close();
     }
