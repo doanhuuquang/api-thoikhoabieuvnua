@@ -170,6 +170,15 @@ export class WebScraper {
       await page.click(`xpath=${LINK_BUTTON_TKB_TUAN}`);
       await this.waitForPageLoad(page);
     } catch (e) {
+      if (page) await page.close();
+      if (this.context) {
+        await this.context.close();
+        this.context = null;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
       throw new Error(
         "Không thể lấy thông tin thời khóa biểu, vui lòng thử lại sau"
       );
@@ -182,6 +191,15 @@ export class WebScraper {
       await this.waitForPageLoad(page);
       return await page.$$(SEMESTER_DROP_DOWN_SELECTOR);
     } catch (e) {
+      if (page) await page.close();
+      if (this.context) {
+        await this.context.close();
+        this.context = null;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
       throw new Error("Không thể lấy danh sách học kỳ");
     }
   }
@@ -217,6 +235,15 @@ export class WebScraper {
       const dd = String(result.getDate()).padStart(2, "0");
       return `${yyyy}-${mm}-${dd}`;
     } catch (e) {
+      if (page) await page.close();
+      if (this.context) {
+        await this.context.close();
+        this.context = null;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
       throw new Error("Không thể lấy ngày bắt đầu học kỳ");
     }
   }
@@ -241,6 +268,15 @@ export class WebScraper {
 
       return await page.content();
     } catch (e) {
+      if (page) await page.close();
+      if (this.context) {
+        await this.context.close();
+        this.context = null;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
       throw new Error("Không thể lấy bảng thời khóa biểu");
     }
   }
