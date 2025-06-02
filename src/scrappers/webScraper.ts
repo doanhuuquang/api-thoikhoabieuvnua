@@ -1,7 +1,6 @@
 import { chromium, Browser, BrowserContext, Page, Locator } from "playwright";
 import { User } from "../models/User";
 import { Schedule } from "../models/Schedule";
-import { Subject } from "../models/Subject";
 import { ScheduleParser } from "./scheduleParse";
 
 const URL_DAO_TAO_VNUA = "https://daotao.vnua.edu.vn/";
@@ -62,6 +61,14 @@ export class WebScraper {
       return page;
     } catch (e) {
       await page.close();
+      if (this.context) {
+        await this.context.close();
+        this.context = null;
+      }
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
       throw new Error("Không thể đăng nhập vào trang đào tạo");
     }
   }
@@ -123,7 +130,7 @@ export class WebScraper {
       schedule.semesterStartDate = date;
 
       const html = await this.fetchTableSchedule(page, semesterIndex);
-      
+
       const scheduleParser = new ScheduleParser(schedule.semesterStartDate);
       const schedules = scheduleParser.getSchedule(html);
       schedule.schedules = schedules;
