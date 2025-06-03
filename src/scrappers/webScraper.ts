@@ -32,6 +32,9 @@ export class WebScraper {
   private context: BrowserContext | null = null;
 
   async init() {
+    // Cleanup existing resources first
+    await this.cleanup();
+
     this.browser = await chromium.launch({
       headless: HEADLESS_MODE,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -43,12 +46,31 @@ export class WebScraper {
   }
 
   async cleanup() {
-    if (this.browser) await this.browser.close();
+    try {
+      if (this.context) {
+        await this.context.close();
+        this.context = null;
+      }
+    } catch (e) {
+      console.error("Error closing context:", e);
+    }
+
+    try {
+      if (this.browser) {
+        await this.browser.close();
+        this.browser = null;
+      }
+    } catch (e) {
+      console.error("Error closing browser:", e);
+    }
   }
 
   async loginWeb(studentCode: string, password: string): Promise<Page> {
-    if (!this.context) throw new Error("Browser context not initialized");
-    const page = await this.context.newPage();
+    // Always create fresh browser instance for login
+    await this.init();
+
+    const page = await this.context!.newPage();
+
     try {
       await page.goto(URL_DAO_TAO_VNUA);
       await this.waitForPageLoad(page);
@@ -58,16 +80,28 @@ export class WebScraper {
       await page.click(LOGIN_BUTTON);
 
       await this.waitForPageLoad(page);
-      return page;
-    } catch (e) {
-      if (page) await page.close();
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
+
+      // Verify login success by checking if login elements are gone
+      // and user info is present
+      try {
+        await page.waitForSelector(`xpath=${USER_NAME_LOGGED}`, {
+          timeout: TIMEOUT,
+          state: "visible",
+        });
+        // Login successful
+        return page;
+      } catch (loginError) {
+        // Login failed - user info element not found
+        await page.close();
+        await this.cleanup();
+        throw new Error("Thông tin đăng nhập không chính xác");
       }
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
+    } catch (e) {
+      await page.close();
+      await this.cleanup();
+
+      if (e.message.includes("Thông tin đăng nhập không chính xác")) {
+        throw e;
       }
       throw new Error("Không thể đăng nhập vào trang đào tạo");
     }
@@ -80,25 +114,15 @@ export class WebScraper {
     let page: Page | null = null;
     try {
       page = await this.loginWeb(studentCode, password);
-      await page.waitForSelector(`xpath=${USER_NAME_LOGGED}`, {
-        timeout: TIMEOUT,
-        state: "visible",
-      });
       const userName = await page.innerText(`xpath=${USER_NAME_LOGGED}`);
       return new User(userName, studentCode, password);
     } catch (e) {
-      if (page) await page.close();
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
-      }
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
-      }
       throw new Error("Thông tin đăng nhập của sinh viên không đúng");
     } finally {
-      if (page) await page.close();
+      if (page) {
+        await page.close();
+      }
+      await this.cleanup();
     }
   }
 
@@ -146,18 +170,15 @@ export class WebScraper {
 
       return schedule;
     } catch (e) {
-      if (page) await page.close();
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
+      if (e.message.includes("Thông tin đăng nhập")) {
+        throw e;
       }
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
-      }
-      throw new Error("Thông tin đăng nhập của sinh viên không đúng");
+      throw new Error("Không thể lấy thông tin thời khóa biểu");
     } finally {
-      if (page) await page.close();
+      if (page) {
+        await page.close();
+      }
+      await this.cleanup();
     }
   }
 
@@ -170,15 +191,6 @@ export class WebScraper {
       await page.click(`xpath=${LINK_BUTTON_TKB_TUAN}`);
       await this.waitForPageLoad(page);
     } catch (e) {
-      if (page) await page.close();
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
-      }
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
-      }
       throw new Error(
         "Không thể lấy thông tin thời khóa biểu, vui lòng thử lại sau"
       );
@@ -191,15 +203,6 @@ export class WebScraper {
       await this.waitForPageLoad(page);
       return await page.$$(SEMESTER_DROP_DOWN_SELECTOR);
     } catch (e) {
-      if (page) await page.close();
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
-      }
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
-      }
       throw new Error("Không thể lấy danh sách học kỳ");
     }
   }
@@ -235,15 +238,6 @@ export class WebScraper {
       const dd = String(result.getDate()).padStart(2, "0");
       return `${yyyy}-${mm}-${dd}`;
     } catch (e) {
-      if (page) await page.close();
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
-      }
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
-      }
       throw new Error("Không thể lấy ngày bắt đầu học kỳ");
     }
   }
@@ -268,15 +262,6 @@ export class WebScraper {
 
       return await page.content();
     } catch (e) {
-      if (page) await page.close();
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
-      }
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
-      }
       throw new Error("Không thể lấy bảng thời khóa biểu");
     }
   }
