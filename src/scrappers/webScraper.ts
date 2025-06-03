@@ -27,49 +27,60 @@ const SEMESTER_TABLE_COMBO_BOX_XPATH =
 const HEADLESS_MODE = true;
 const TIMEOUT = 5000;
 
+// Interface for browser session
+interface BrowserSession {
+  browser: Browser;
+  context: BrowserContext;
+}
+
 export class WebScraper {
-  private browser: Browser | null = null;
-  private context: BrowserContext | null = null;
-
-  async init() {
-    // Cleanup existing resources first
-    await this.cleanup();
-
-    this.browser = await chromium.launch({
+  private async createBrowserSession(): Promise<BrowserSession> {
+    const browser = await chromium.launch({
       headless: HEADLESS_MODE,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process",
+      ],
     });
-    this.context = await this.browser.newContext({
+
+    const context = await browser.newContext({
       userAgent:
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     });
+
+    return { browser, context };
   }
 
-  async cleanup() {
+  private async cleanupBrowserSession(session: BrowserSession) {
     try {
-      if (this.context) {
-        await this.context.close();
-        this.context = null;
+      if (session.context) {
+        await session.context.close();
       }
     } catch (e) {
       console.error("Error closing context:", e);
     }
 
     try {
-      if (this.browser) {
-        await this.browser.close();
-        this.browser = null;
+      if (session.browser) {
+        await session.browser.close();
       }
     } catch (e) {
       console.error("Error closing browser:", e);
     }
   }
 
-  async loginWeb(studentCode: string, password: string): Promise<Page> {
-    // Always create fresh browser instance for login
-    await this.init();
+  async loginWeb(
+    studentCode: string,
+    password: string
+  ): Promise<{ page: Page; session: BrowserSession }> {
+    const session = await this.createBrowserSession();
 
-    const page = await this.context!.newPage();
+    const page = await session.context.newPage();
 
     try {
       await page.goto(URL_DAO_TAO_VNUA);
@@ -81,24 +92,23 @@ export class WebScraper {
 
       await this.waitForPageLoad(page);
 
-      // Verify login success by checking if login elements are gone
-      // and user info is present
+      // Verify login success
       try {
         await page.waitForSelector(`xpath=${USER_NAME_LOGGED}`, {
           timeout: TIMEOUT,
           state: "visible",
         });
-        // Login successful
-        return page;
+        // Login successful - return both page and session
+        return { page, session };
       } catch (loginError) {
-        // Login failed - user info element not found
+        // Login failed
         await page.close();
-        await this.cleanup();
+        await this.cleanupBrowserSession(session);
         throw new Error("Thông tin đăng nhập không chính xác");
       }
     } catch (e) {
       await page.close();
-      await this.cleanup();
+      await this.cleanupBrowserSession(session);
 
       if (e.message.includes("Thông tin đăng nhập không chính xác")) {
         throw e;
@@ -112,8 +122,13 @@ export class WebScraper {
     password: string
   ): Promise<User> {
     let page: Page | null = null;
+    let session: BrowserSession | null = null;
+
     try {
-      page = await this.loginWeb(studentCode, password);
+      const loginResult = await this.loginWeb(studentCode, password);
+      page = loginResult.page;
+      session = loginResult.session;
+
       const userName = await page.innerText(`xpath=${USER_NAME_LOGGED}`);
       return new User(userName, studentCode, password);
     } catch (e) {
@@ -122,7 +137,9 @@ export class WebScraper {
       if (page) {
         await page.close();
       }
-      await this.cleanup();
+      if (session) {
+        await this.cleanupBrowserSession(session);
+      }
     }
   }
 
@@ -132,8 +149,13 @@ export class WebScraper {
     semesterCode: string
   ): Promise<Schedule> {
     let page: Page | null = null;
+    let session: BrowserSession | null = null;
+
     try {
-      page = await this.loginWeb(studentCode, password);
+      const loginResult = await this.loginWeb(studentCode, password);
+      page = loginResult.page;
+      session = loginResult.session;
+
       const fullSemesterText = this.convertSemesterCode(semesterCode);
 
       await this.redirecToWeekSchedulePage(page);
@@ -178,7 +200,9 @@ export class WebScraper {
       if (page) {
         await page.close();
       }
-      await this.cleanup();
+      if (session) {
+        await this.cleanupBrowserSession(session);
+      }
     }
   }
 
@@ -292,5 +316,28 @@ export class WebScraper {
 
   async waitForPageLoad(page: Page) {
     await page.waitForLoadState("networkidle");
+  }
+}
+
+export class WebScraperStatic {
+  static async verifyStudentLoginOnWeb(
+    studentCode: string,
+    password: string
+  ): Promise<User> {
+    const scraper = new WebScraper();
+    return await scraper.verifyStudentLoginOnWeb(studentCode, password);
+  }
+
+  static async fetchScheduleOnWeb(
+    studentCode: string,
+    password: string,
+    semesterCode: string
+  ): Promise<Schedule> {
+    const scraper = new WebScraper();
+    return await scraper.fetchScheduleOnWeb(
+      studentCode,
+      password,
+      semesterCode
+    );
   }
 }

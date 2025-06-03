@@ -4,17 +4,13 @@ import { WebScraper } from "../scrappers/webScraper";
 import { IScheduleService } from "./IScheduleService";
 
 export class ScheduleService implements IScheduleService {
-  private webScraper: WebScraper;
-
-  constructor() {
-    this.webScraper = new WebScraper();
-  }
+  constructor() {}
 
   async getSchedule(userDTO: UserDTO, semesterCode: string): Promise<Schedule> {
-    await this.webScraper.init();
+    const webScraper = new WebScraper();
 
     const { studentCode, password } = userDTO;
-    const schedule = await this.webScraper.fetchScheduleOnWeb(
+    const schedule = await webScraper.fetchScheduleOnWeb(
       studentCode,
       password,
       semesterCode

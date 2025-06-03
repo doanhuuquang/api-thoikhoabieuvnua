@@ -6,14 +6,9 @@ import UserModel from "../models/UserModel";
 import bcrypt from "bcrypt";
 
 export class UserService implements IUserService {
-  private webScraper: WebScraper;
-
-  constructor() {
-    this.webScraper = new WebScraper();
-  }
+  constructor() {}
 
   async login(userDTO: UserDTO): Promise<User> {
-    await this.webScraper.init();
     const { studentCode, password } = userDTO;
     if (!studentCode || !password) {
       throw new Error("Mã sinh viên và mật khẩu không được để trống");
@@ -28,7 +23,8 @@ export class UserService implements IUserService {
   }
 
   async register(userDTO: UserDTO): Promise<User> {
-    await this.webScraper.init();
+    const webScraper = new WebScraper();
+
     const { studentCode, password } = userDTO;
     if (!studentCode || !password) {
       throw new Error("Mã sinh viên hoặc mật khẩu không được null");
@@ -42,7 +38,7 @@ export class UserService implements IUserService {
     }
 
     // Xác thực tài khoản trên web đào tạo
-    const userFromWeb = await this.webScraper.verifyStudentLoginOnWeb(
+    const userFromWeb = await webScraper.verifyStudentLoginOnWeb(
       studentCode,
       password
     );
