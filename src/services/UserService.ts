@@ -1,14 +1,14 @@
 import { UserDTO } from "../DTOs/UserDTO";
-import { User } from "../models/User";
 import { WebScraper } from "../scrappers/webScraper";
 import { IUserService } from "./IUserService";
 import UserModel from "../models/UserModel";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 export class UserService implements IUserService {
   constructor() {}
 
-  async login(userDTO: UserDTO): Promise<User> {
+  async login(userDTO: UserDTO): Promise<{ token: string }> {
     const { studentCode, password } = userDTO;
     if (!studentCode || !password) {
       throw new Error("Mã sinh viên và mật khẩu không được để trống");
@@ -16,13 +16,19 @@ export class UserService implements IUserService {
 
     const user = await UserModel.findOne({ studentCode });
     if (user && (await bcrypt.compare(password, user.password))) {
-      return user;
+      // Tạo token
+      const token = jwt.sign(
+        { studentCode: user.studentCode, name: user.name },
+        process.env.JWT_SECRET || "secret_key",
+        { expiresIn: "30d" }
+      );
+      return { token };
     } else {
       throw new Error("Tài khoản hoặc mật khẩu không chính xác");
     }
   }
 
-  async register(userDTO: UserDTO): Promise<User> {
+  async register(userDTO: UserDTO): Promise<{ token: string }> {
     const webScraper = new WebScraper();
 
     const { studentCode, password } = userDTO;
@@ -53,6 +59,13 @@ export class UserService implements IUserService {
       password: hashedPassword,
     });
 
-    return userSaved;
+    // Tạo token
+    const token = jwt.sign(
+      { studentCode: userSaved.studentCode, name: userSaved.name },
+      process.env.JWT_SECRET || "secret_key",
+      { expiresIn: "30d" }
+    );
+
+    return { token };
   }
 }
