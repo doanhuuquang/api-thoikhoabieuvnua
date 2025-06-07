@@ -27,3 +27,17 @@ export const getSchedule = async (
     next(err);
   }
 };
+
+export const getSemesterList = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userDTO: UserDTO = req.body;
+    const semesters = await scheduleService.getSemesterList(userDTO);
+    res.json({ semesters });
+  } catch (err) {
+    next(err);
+  }
+};

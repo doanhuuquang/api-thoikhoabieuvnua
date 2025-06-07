@@ -221,6 +221,34 @@ export class WebScraper {
     }
   }
 
+  async fetchSemesterNames(
+    studentCode: string,
+    password: string
+  ): Promise<string[]> {
+    let page: Page | null = null;
+    let session: BrowserSession | null = null;
+    try {
+      const loginResult = await this.loginWeb(studentCode, password);
+      page = loginResult.page;
+      session = loginResult.session;
+
+      await this.redirecToWeekSchedulePage(page);
+      await page.click(`xpath=${SEMESTER_COMBO_BOX_XPATH}`);
+      await this.waitForPageLoad(page);
+
+      const semesterElements = await page.$$(SEMESTER_DROP_DOWN_SELECTOR);
+      const semesterNames: string[] = [];
+      for (const element of semesterElements) {
+        const text = (await element.innerText()).trim();
+        semesterNames.push(text);
+      }
+      return semesterNames;
+    } finally {
+      if (page) await page.close();
+      if (session) await this.cleanupBrowserSession(session);
+    }
+  }
+
   async fetchSemesterList(page: Page) {
     try {
       await page.click(`xpath=${SEMESTER_COMBO_BOX_XPATH}`);

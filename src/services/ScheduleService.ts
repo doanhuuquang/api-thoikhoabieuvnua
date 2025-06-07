@@ -17,4 +17,15 @@ export class ScheduleService implements IScheduleService {
     );
     return schedule;
   }
+
+  async getSemesterList(userDTO: UserDTO): Promise<string[]> {
+    const webScraper = new WebScraper();
+
+    const { studentCode, password } = userDTO;
+    const semesterNames: string[] = await webScraper.fetchSemesterNames(
+      studentCode,
+      password
+    );
+    return semesterNames;
+  }
 }
