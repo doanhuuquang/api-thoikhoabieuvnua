@@ -9,6 +9,8 @@ const LINK_BUTTON_TKB_TUAN =
   "/html/body/app-root/div/div/div/div[1]/div/div/div[2]/app-right/app-chucnang/div/div[2]/ul[9]/li/div[1]/a[1]";
 const LINK_BUTTON_TKB_HK =
   "/html/body/app-root/div/div/div/div[1]/div/div/div[2]/app-right/app-chucnang/div/div[2]/ul[10]/li/div[1]/a[1]";
+const LINK_BUTTON_THONG_TIN_SINH_VIEN =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[2]/app-right/app-chucnang/div/div[2]/ul[16]/li/div[1]/a[1]";
 
 const USER_NAME_INPUT = "input[name='username']";
 const PASSWORD_INPUT = "input[name='password']";
@@ -24,8 +26,47 @@ const SEMESTER_DROP_DOWN_SELECTOR = ".ng-option";
 const SEMESTER_TABLE_COMBO_BOX_XPATH =
   "/html/body/app-root[1]/div/div/div/div[1]/div/div/div[1]/app-tkb-hocky/div/div[2]/div[1]/div/ng-select/div";
 
-const HEADLESS_MODE = true;
-const TIMEOUT = 5000;
+const STUDENT_CODE_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[2]/div[1]/div[2]"; // Mã sinh viên
+const STUDENT_NAME_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[2]/div[2]/div[2]"; // Tên sinh viên
+const STUDENT_DATE_OF_BIRTH_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[2]/div[3]/div[2]"; // Ngày sinh
+const STUDENT_GENDER_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[2]/div[4]/div[2]"; // Giới tính
+const STUDENT_STATUS_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[2]/div[5]/div[2]"; // Trạng thái
+const STUDENT_CLASS_NAME_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[3]/div[1]/div[2]"; // Tên lớp
+const STUDENT_FACULTY_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[3]/div[2]/div[2]"; // Khoa
+const STUDENT_EDUCATION_PROGRAM_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[3]/div[3]/div[2]"; // Chương trình đào tạo
+const STUDENT_MAJOR_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[3]/div[4]/div[2]"; // Ngành học
+const STUDENT_ACADEMIC_YEAR_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[3]/div[5]/div[2]"; // Niên khóa
+const STUDENT_PHONE_NUMBER_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[1]/div[1]/input"; // Số điện thoại
+const STUDENT_EDU_EMAIL_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[1]/div[2]/input"; // Email edu
+const STUDENT_PERSONAL_EMAIL_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[1]/div[3]/input"; // Email cá nhân
+const STUDENT_PLACE_OF_BIRTH_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[2]/div/input"; // Nơi sinh
+const STUDENT_IDENTITY_NUMBER_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[4]/div[1]/input"; // Số CMND/CCCD
+const STUDENT_IDENTITY_ISSUED_PLACE_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[4]/div[3]/input"; // Nơi cấp CMND/CCCD
+const STUDENT_NATIONALITY_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[5]/div[1]/ng-select/div/div/div[2]/span[2]"; // Quốc tịch
+const STUDENT_ETHNICITY_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[5]/div[2]/ng-select/div/div/div[2]/span[2]"; // Dân tộc
+const STUDENT_BANK_ACCOUNT_NUMBER_XPATH =
+  "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[7]/div[3]/input"; // Số tài khoản ngân hàng
+
+const HEADLESS_MODE = false;
+const TIMEOUT = 10000;
 
 // Interface for browser session
 interface BrowserSession {
@@ -37,15 +78,15 @@ export class WebScraper {
   private async createBrowserSession(): Promise<BrowserSession> {
     const browser = await chromium.launch({
       headless: HEADLESS_MODE,
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--no-first-run",
-        "--no-zygote",
-        "--single-process",
-      ],
+      // args: [
+      //   "--no-sandbox",
+      //   "--disable-setuid-sandbox",
+      //   "--disable-dev-shm-usage",
+      //   "--disable-gpu",
+      //   "--no-first-run",
+      //   "--no-zygote",
+      //   "--single-process",
+      // ],
     });
 
     const context = await browser.newContext({
@@ -79,7 +120,6 @@ export class WebScraper {
     password: string
   ): Promise<{ page: Page; session: BrowserSession }> {
     const session = await this.createBrowserSession();
-
     const page = await session.context.newPage();
 
     try {
@@ -92,27 +132,22 @@ export class WebScraper {
 
       await this.waitForPageLoad(page);
 
-      // Verify login success
       try {
         await page.waitForSelector(`xpath=${USER_NAME_LOGGED}`, {
           timeout: TIMEOUT,
           state: "visible",
         });
-        // Login successful - return both page and session
         return { page, session };
       } catch (loginError) {
-        // Login failed
         await page.close();
         await this.cleanupBrowserSession(session);
+
         throw new Error("Thông tin đăng nhập không chính xác");
       }
     } catch (e) {
       await page.close();
       await this.cleanupBrowserSession(session);
 
-      if (e.message.includes("Thông tin đăng nhập không chính xác")) {
-        throw e;
-      }
       throw new Error("Không thể đăng nhập vào trang đào tạo");
     }
   }
@@ -126,11 +161,15 @@ export class WebScraper {
 
     try {
       const loginResult = await this.loginWeb(studentCode, password);
+      console.log("Đăng nhập thành công");
+
       page = loginResult.page;
       session = loginResult.session;
 
-      const userName = await page.innerText(`xpath=${USER_NAME_LOGGED}`);
-      return new User(userName, studentCode, password);
+      // Lấy thông tin sinh viên sau khi đăng nhập thành công
+      console.log("Bắt đầu lấy thông tin sinh viên");
+      const user: User = await this.fetchStudentInfoOnWeb(page);
+      return user;
     } catch (e) {
       throw new Error("Thông tin đăng nhập của sinh viên không đúng");
     } finally {
@@ -140,6 +179,182 @@ export class WebScraper {
       if (session) {
         await this.cleanupBrowserSession(session);
       }
+    }
+  }
+
+  async fetchStudentInfoOnWeb(page: Page): Promise<User> {
+    try {
+      console.log("Bắt đầu lấy thông tin sinh viên từ trang đào tạo");
+      await this.redirecToStudentInforPage(page);
+
+      console.log("Chờ đợi các trường thông tin sinh viên hiển thị");
+      await this.waitForElementSelector(page, `xpath=${STUDENT_CODE_XPATH}`);
+      await this.waitForElementSelector(page, `xpath=${STUDENT_NAME_XPATH}`);
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_DATE_OF_BIRTH_XPATH}`
+      );
+      await this.waitForElementSelector(page, `xpath=${STUDENT_GENDER_XPATH}`);
+      await this.waitForElementSelector(page, `xpath=${STUDENT_STATUS_XPATH}`);
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_CLASS_NAME_XPATH}`
+      );
+      await this.waitForElementSelector(page, `xpath=${STUDENT_FACULTY_XPATH}`);
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_EDUCATION_PROGRAM_XPATH}`
+      );
+      await this.waitForElementSelector(page, `xpath=${STUDENT_MAJOR_XPATH}`);
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_ACADEMIC_YEAR_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_PHONE_NUMBER_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_EDU_EMAIL_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_PERSONAL_EMAIL_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_PLACE_OF_BIRTH_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_IDENTITY_NUMBER_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_IDENTITY_ISSUED_PLACE_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_NATIONALITY_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_ETHNICITY_XPATH}`
+      );
+      await this.waitForElementSelector(
+        page,
+        `xpath=${STUDENT_BANK_ACCOUNT_NUMBER_XPATH}`
+      );
+
+      console.log("Đã lấy thông tin sinh viên thành công");
+      const studentCode = (
+        await page.textContent(`xpath=${STUDENT_CODE_XPATH}`)
+      )?.trim();
+      const name = (
+        await page.textContent(`xpath=${STUDENT_NAME_XPATH}`)
+      )?.trim();
+      const dateOfBirth = (
+        await page.textContent(`xpath=${STUDENT_DATE_OF_BIRTH_XPATH}`)
+      )?.trim();
+      const gender = (
+        await page.textContent(`xpath=${STUDENT_GENDER_XPATH}`)
+      )?.trim();
+      const status = (
+        await page.textContent(`xpath=${STUDENT_STATUS_XPATH}`)
+      )?.trim();
+      const className = (
+        await page.textContent(`xpath=${STUDENT_CLASS_NAME_XPATH}`)
+      )?.trim();
+      const faculty = (
+        await page.textContent(`xpath=${STUDENT_FACULTY_XPATH}`)
+      )?.trim();
+      const educationProgram = (
+        await page.textContent(`xpath=${STUDENT_EDUCATION_PROGRAM_XPATH}`)
+      )?.trim();
+      const major = (
+        await page.textContent(`xpath=${STUDENT_MAJOR_XPATH}`)
+      )?.trim();
+      const academicYear = (
+        await page.textContent(`xpath=${STUDENT_ACADEMIC_YEAR_XPATH}`)
+      )?.trim();
+      const phoneNumber = (
+        await page.inputValue(`xpath=${STUDENT_PHONE_NUMBER_XPATH}`)
+      ).trim();
+      const eduEmail = (
+        await page.inputValue(`xpath=${STUDENT_EDU_EMAIL_XPATH}`)
+      ).trim();
+      const personalEmail = (
+        await page.inputValue(`xpath=${STUDENT_PERSONAL_EMAIL_XPATH}`)
+      ).trim();
+      const placeOfBirth = (
+        await page.inputValue(`xpath=${STUDENT_PLACE_OF_BIRTH_XPATH}`)
+      ).trim();
+      const identityNumber = (
+        await page.inputValue(`xpath=${STUDENT_IDENTITY_NUMBER_XPATH}`)
+      ).trim();
+      const identityIssuedPlace = (
+        await page.inputValue(`xpath=${STUDENT_IDENTITY_ISSUED_PLACE_XPATH}`)
+      ).trim();
+      const nationality = (
+        await page.innerText(`xpath=${STUDENT_NATIONALITY_XPATH}`)
+      ).trim();
+      const ethnicity = (
+        await page.innerText(`xpath=${STUDENT_ETHNICITY_XPATH}`)
+      ).trim();
+      const bankAccountNumber = (
+        await page.inputValue(`xpath=${STUDENT_BANK_ACCOUNT_NUMBER_XPATH}`)
+      ).trim();
+
+      return new User({
+        studentCode,
+        name,
+        dateOfBirth,
+        gender,
+        status,
+        className,
+        faculty,
+        educationProgram,
+        major,
+        academicYear,
+        phoneNumber,
+        eduEmail,
+        personalEmail,
+        placeOfBirth,
+        identityNumber,
+        identityIssuedPlace,
+        nationality,
+        ethnicity,
+        bankAccountNumber,
+      });
+    } catch (e) {
+      throw new Error("Không thể lấy thông tin người dùng");
+    }
+  }
+
+  async waitForElementSelector(page: Page, selector: string) {
+    try {
+      await page.waitForSelector(selector, {
+        timeout: TIMEOUT,
+        state: "visible",
+      });
+    } catch (e) {
+      throw new Error(`Không thể lấy thông tin người dùng`);
+    }
+  }
+
+  async redirecToStudentInforPage(page: Page) {
+    try {
+      await page.waitForSelector(`xpath=${LINK_BUTTON_THONG_TIN_SINH_VIEN}`, {
+        timeout: TIMEOUT,
+        state: "visible",
+      });
+      await page.click(`xpath=${LINK_BUTTON_THONG_TIN_SINH_VIEN}`);
+      await this.waitForPageLoad(page);
+    } catch (e) {
+      throw new Error(
+        "Không thể lấy thông tin sinh viên, vui lòng thử lại sau"
+      );
     }
   }
 

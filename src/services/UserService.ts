@@ -4,6 +4,7 @@ import { IUserService } from "./IUserService";
 import UserModel from "../models/UserModel";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { User } from "../models/User";
 
 export class UserService implements IUserService {
   constructor() {}
@@ -28,7 +29,7 @@ export class UserService implements IUserService {
     }
   }
 
-  async register(userDTO: UserDTO): Promise<{ token: string }> {
+  async register(userDTO: UserDTO): Promise<{ user: User }> {
     const webScraper = new WebScraper();
 
     const { studentCode, password } = userDTO;
@@ -44,7 +45,7 @@ export class UserService implements IUserService {
     }
 
     // Xác thực tài khoản trên web đào tạo
-    const userFromWeb = await webScraper.verifyStudentLoginOnWeb(
+    const userFromWeb: User = await webScraper.verifyStudentLoginOnWeb(
       studentCode,
       password
     );
@@ -54,8 +55,25 @@ export class UserService implements IUserService {
 
     // Lưu vào database
     const userSaved = await UserModel.create({
-      name: userFromWeb.name,
       studentCode: userFromWeb.studentCode,
+      name: userFromWeb.name,
+      dateOfBirth: userFromWeb.dateOfBirth,
+      gender: userFromWeb.gender,
+      status: userFromWeb.status,
+      className: userFromWeb.className,
+      faculty: userFromWeb.faculty,
+      educationProgram: userFromWeb.educationProgram,
+      major: userFromWeb.major,
+      academicYear: userFromWeb.academicYear,
+      phoneNumber: userFromWeb.phoneNumber,
+      eduEmail: userFromWeb.eduEmail,
+      personalEmail: userFromWeb.personalEmail,
+      placeOfBirth: userFromWeb.placeOfBirth,
+      identityNumber: userFromWeb.identityNumber,
+      identityIssuedPlace: userFromWeb.identityIssuedPlace,
+      nationality: userFromWeb.nationality,
+      ethnicity: userFromWeb.ethnicity,
+      bankAccountNumber: userFromWeb.bankAccountNumber,
       password: hashedPassword,
     });
 
@@ -66,6 +84,6 @@ export class UserService implements IUserService {
       { expiresIn: "30d" }
     );
 
-    return { token };
+    return { user: userFromWeb };
   }
 }
