@@ -78,15 +78,15 @@ export class WebScraper {
   private async createBrowserSession(): Promise<BrowserSession> {
     const browser = await chromium.launch({
       headless: HEADLESS_MODE,
-      // args: [
-      //   "--no-sandbox",
-      //   "--disable-setuid-sandbox",
-      //   "--disable-dev-shm-usage",
-      //   "--disable-gpu",
-      //   "--no-first-run",
-      //   "--no-zygote",
-      //   "--single-process",
-      // ],
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process",
+      ],
     });
 
     const context = await browser.newContext({

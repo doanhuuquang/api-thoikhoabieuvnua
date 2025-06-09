@@ -33,3 +33,21 @@ export const register = async (
     next(err);
   }
 };
+
+export const getUserProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const studentCode = (req as any).user.studentCode;
+    const user = await userService.getUserByStudentCode(studentCode);
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ message: "Không tìm thấy người dùng" });
+    }
+  } catch (err) {
+    next(err);
+  }
+};

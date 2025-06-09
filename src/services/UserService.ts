@@ -19,7 +19,7 @@ export class UserService implements IUserService {
     if (user && (await bcrypt.compare(password, user.password))) {
       // Tạo token
       const token = jwt.sign(
-        { studentCode: user.studentCode, name: user.name },
+        { studentCode: user.studentCode },
         process.env.JWT_SECRET || "secret_key",
         { expiresIn: "30d" }
       );
@@ -29,7 +29,7 @@ export class UserService implements IUserService {
     }
   }
 
-  async register(userDTO: UserDTO): Promise<{ user: User }> {
+  async register(userDTO: UserDTO): Promise<{ token: string }> {
     const webScraper = new WebScraper();
 
     const { studentCode, password } = userDTO;
@@ -79,11 +79,19 @@ export class UserService implements IUserService {
 
     // Tạo token
     const token = jwt.sign(
-      { studentCode: userSaved.studentCode, name: userSaved.name },
+      { studentCode: userSaved.studentCode },
       process.env.JWT_SECRET || "secret_key",
       { expiresIn: "30d" }
     );
 
-    return { user: userFromWeb };
+    return { token };
+  }
+
+  async getUserByStudentCode(studentCode: string): Promise<User | null> {
+    if (!studentCode) {
+      throw new Error("Mã sinh viên không được để trống");
+    }
+    const user = await UserModel.findOne({ studentCode });
+    return user ? new User(user.toObject()) : null;
   }
 }
