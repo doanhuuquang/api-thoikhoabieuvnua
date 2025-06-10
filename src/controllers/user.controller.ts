@@ -44,9 +44,11 @@ export const getUserProfile = async (
     const user = await userService.getUserByStudentCode(studentCode);
     if (user) {
       res.json(user);
-    } else {
-      res.status(404).json({ message: "Không tìm thấy người dùng" });
+      return;
     }
+
+    res.status(404).json({ message: "Không tìm thấy người dùng" });
+    return;
   } catch (err) {
     next(err);
   }

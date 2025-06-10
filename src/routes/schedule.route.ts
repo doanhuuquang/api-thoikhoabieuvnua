@@ -3,10 +3,11 @@ import {
   getSchedule,
   getSemesterList,
 } from "../controllers/schedule.controller";
+import { authenticateToken } from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.post("/", getSemesterList);
-router.post("/:semesterCode", getSchedule);
+router.post("/:semesterCode", authenticateToken, getSchedule);
+router.post("", authenticateToken, getSemesterList);
 
 export default router;

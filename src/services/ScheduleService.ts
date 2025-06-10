@@ -26,6 +26,7 @@ export class ScheduleService implements IScheduleService {
       studentCode,
       password
     );
+
     return semesterNames;
   }
 }

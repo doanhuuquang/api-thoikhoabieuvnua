@@ -182,7 +182,7 @@ export class WebScraper {
   async fetchStudentInfoOnWeb(page: Page): Promise<User> {
     try {
       console.log("Bắt đầu lấy thông tin sinh viên từ trang đào tạo");
-      await this.redirecToStudentInforPage(page);
+      await this.redirectToStudentInforPage(page);
 
       console.log("Chờ đợi các trường thông tin sinh viên hiển thị");
       await this.waitForElementSelector(page, `xpath=${STUDENT_CODE_XPATH}`);
@@ -340,7 +340,7 @@ export class WebScraper {
     }
   }
 
-  async redirecToStudentInforPage(page: Page) {
+  async redirectToStudentInforPage(page: Page) {
     try {
       await page.waitForSelector(`xpath=${LINK_BUTTON_THONG_TIN_SINH_VIEN}`, {
         timeout: TIMEOUT,
@@ -370,7 +370,7 @@ export class WebScraper {
 
       const fullSemesterText = this.convertSemesterCode(semesterCode);
 
-      await this.redirecToWeekSchedulePage(page);
+      await this.redirectToWeekSchedulePage(page);
 
       await page.click(`xpath=${SEMESTER_COMBO_BOX_XPATH}`);
       await this.waitForPageLoad(page);
@@ -418,13 +418,28 @@ export class WebScraper {
     }
   }
 
-  async redirecToWeekSchedulePage(page: Page) {
+  async redirectToWeekSchedulePage(page: Page) {
     try {
       await page.waitForSelector(`xpath=${LINK_BUTTON_TKB_TUAN}`, {
         timeout: TIMEOUT,
         state: "visible",
       });
       await page.click(`xpath=${LINK_BUTTON_TKB_TUAN}`);
+      await this.waitForPageLoad(page);
+    } catch (e) {
+      throw new Error(
+        "Không thể lấy thông tin thời khóa biểu, vui lòng thử lại sau"
+      );
+    }
+  }
+
+  async redirectToSemesterSchedulePage(page: Page) {
+    try {
+      await page.waitForSelector(`xpath=${LINK_BUTTON_TKB_HK}`, {
+        timeout: TIMEOUT,
+        state: "visible",
+      });
+      await page.click(`xpath=${LINK_BUTTON_TKB_HK}`);
       await this.waitForPageLoad(page);
     } catch (e) {
       throw new Error(
@@ -444,30 +459,27 @@ export class WebScraper {
       page = loginResult.page;
       session = loginResult.session;
 
-      await this.redirecToWeekSchedulePage(page);
-      await page.click(`xpath=${SEMESTER_COMBO_BOX_XPATH}`);
+      await this.redirectToSemesterSchedulePage(page);
       await this.waitForPageLoad(page);
 
+      await page.click(`xpath=${SEMESTER_TABLE_COMBO_BOX_XPATH}`);
+      await this.waitForPageLoad(page);
+      await page.waitForTimeout(2000);
+
       const semesterElements = await page.$$(SEMESTER_DROP_DOWN_SELECTOR);
+      if (semesterElements.length === 0) {
+        throw new Error("Không tìm thấy học kỳ nào trong combo box");
+      }
       const semesterNames: string[] = [];
       for (const element of semesterElements) {
         const text = (await element.innerText()).trim();
         semesterNames.push(text);
       }
+      console.log("Danh sách học kỳ:", semesterNames);
       return semesterNames;
     } finally {
       if (page) await page.close();
       if (session) await this.cleanupBrowserSession(session);
-    }
-  }
-
-  async fetchSemesterList(page: Page) {
-    try {
-      await page.click(`xpath=${SEMESTER_COMBO_BOX_XPATH}`);
-      await this.waitForPageLoad(page);
-      return await page.$$(SEMESTER_DROP_DOWN_SELECTOR);
-    } catch (e) {
-      throw new Error("Không thể lấy danh sách học kỳ");
     }
   }
 
@@ -508,11 +520,7 @@ export class WebScraper {
 
   async fetchTableSchedule(page: Page, semesterIndex: number): Promise<string> {
     try {
-      await page.waitForSelector(`xpath=${LINK_BUTTON_TKB_HK}`, {
-        timeout: TIMEOUT,
-        state: "visible",
-      });
-      await page.click(`xpath=${LINK_BUTTON_TKB_HK}`);
+      await this.redirectToSemesterSchedulePage(page);
       await this.waitForPageLoad(page);
 
       await page.click(`xpath=${SEMESTER_TABLE_COMBO_BOX_XPATH}`);
