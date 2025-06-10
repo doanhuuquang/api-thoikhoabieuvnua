@@ -12,8 +12,8 @@ export const login = async (
   try {
     const { studentCode, password } = req.body;
     const userDTO: UserDTO = new UserDTO(studentCode, password);
-    const user = await userService.login(userDTO);
-    res.json(user);
+    const token = await userService.login(userDTO);
+    res.json(token);
   } catch (err) {
     next(err);
   }
@@ -27,8 +27,8 @@ export const register = async (
   try {
     const { studentCode, password } = req.body;
     const userDTO: UserDTO = new UserDTO(studentCode, password);
-    const user = await userService.register(userDTO);
-    res.json(user);
+    const token = await userService.register(userDTO);
+    res.json(token);
   } catch (err) {
     next(err);
   }

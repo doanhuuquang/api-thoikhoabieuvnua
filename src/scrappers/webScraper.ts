@@ -65,10 +65,9 @@ const STUDENT_ETHNICITY_XPATH =
 const STUDENT_BANK_ACCOUNT_NUMBER_XPATH =
   "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[7]/div[3]/input"; // Số tài khoản ngân hàng
 
-const HEADLESS_MODE = false;
+const HEADLESS_MODE = true;
 const TIMEOUT = 10000;
 
-// Interface for browser session
 interface BrowserSession {
   browser: Browser;
   context: BrowserContext;
@@ -166,8 +165,6 @@ export class WebScraper {
       page = loginResult.page;
       session = loginResult.session;
 
-      // Lấy thông tin sinh viên sau khi đăng nhập thành công
-      console.log("Bắt đầu lấy thông tin sinh viên");
       const user: User = await this.fetchStudentInfoOnWeb(page);
       return user;
     } catch (e) {
