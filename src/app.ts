@@ -3,6 +3,7 @@ import userRoute from "./routes/user.route";
 import scheduleRoute from "./routes/schedule.route";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import cors from "cors";
 
 dotenv.config();
 
@@ -24,7 +25,13 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).json({
     message: err.message || "Có lỗi xảy ra",
   });
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
 });
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 export const viteNodeApp = app;
