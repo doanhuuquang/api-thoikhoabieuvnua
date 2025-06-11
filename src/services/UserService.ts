@@ -9,52 +9,52 @@ import { User } from "../models/User";
 export class UserService implements IUserService {
   constructor() {}
 
+  async auth(userDTO: UserDTO): Promise<{ token: string }> {
+    try {
+      return await this.login(userDTO);
+    } catch (error) {
+      return await this.register(userDTO);
+    }
+  }
+
   async login(userDTO: UserDTO): Promise<{ token: string }> {
     const { studentCode, password } = userDTO;
+
     if (!studentCode || !password) {
       throw new Error("Mã sinh viên và mật khẩu không được để trống");
     }
 
-    const user = await UserModel.findOne({ studentCode });
-    if (user && (await bcrypt.compare(password, user.password))) {
-      // Tạo token
+    const userFromDB = await UserModel.findOne({ studentCode });
+
+    if (userFromDB && (await bcrypt.compare(password, userFromDB.password))) {
       const token = jwt.sign(
-        { studentCode: user.studentCode },
+        { studentCode: userFromDB?.studentCode },
         process.env.JWT_SECRET || "secret_key",
         { expiresIn: "30d" }
       );
+
       return { token };
-    } else {
-      throw new Error("Tài khoản hoặc mật khẩu không chính xác");
     }
+
+    throw new Error("Tài khoản hoặc mật khẩu không chính xác");
   }
 
   async register(userDTO: UserDTO): Promise<{ token: string }> {
     const webScraper = new WebScraper();
-
     const { studentCode, password } = userDTO;
+
     if (!studentCode || !password) {
-      throw new Error("Mã sinh viên hoặc mật khẩu không được null");
+      throw new Error("Mã sinh viên và mật khẩu không được để trống");
     }
 
-    const existingUser = await UserModel.findOne({ studentCode });
-    if (existingUser) {
-      throw new Error(
-        "Tài khoản này đã được đăng ký trước đó rồi, vui lòng chuyển sang đăng nhập nhé"
-      );
-    }
-
-    // Xác thực tài khoản trên web đào tạo
     const userFromWeb: User = await webScraper.verifyStudentLoginOnWeb(
       studentCode,
       password
     );
 
-    // Mã hóa mật khẩu
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Lưu vào database
-    const userSaved = await UserModel.create({
+    const user = await UserModel.create({
       studentCode: userFromWeb.studentCode,
       name: userFromWeb.name,
       dateOfBirth: userFromWeb.dateOfBirth || "Đang cập nhật",
@@ -77,9 +77,8 @@ export class UserService implements IUserService {
       password: hashedPassword,
     });
 
-    // Tạo token
     const token = jwt.sign(
-      { studentCode: userSaved.studentCode },
+      { studentCode: user.studentCode },
       process.env.JWT_SECRET || "secret_key",
       { expiresIn: "30d" }
     );
