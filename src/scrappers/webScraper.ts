@@ -1,7 +1,7 @@
 import { chromium, Browser, BrowserContext, Page, Locator } from "playwright";
 import { User } from "../models/User";
 import { Schedule } from "../models/Schedule";
-import { ScheduleParser } from "./scheduleParse";
+import { TimeTableParser } from "./timeTableParse";
 
 const URL_DAO_TAO_VNUA = "https://daotao.vnua.edu.vn/";
 
@@ -18,14 +18,13 @@ const LOGIN_BUTTON = "button:has-text('Đăng nhập')";
 const USER_NAME_LOGGED =
   "/html/body/app-root[1]/div/div/div/div[1]/div/div/div[2]/app-right/app-login/div/div[2]/div[1]/table/tr[2]/td[2]/span";
 
-const COMBO_BOX_XPATH = '//*[@id="fullScreen"]/div[2]/div[2]/div[1]/ng-select';
-const DROP_DOWN_ITEM_SELECTOR = ".ng-option";
-const SEMESTER_COMBO_BOX_XPATH =
+const WEEK_COMBO_BOX_XPATH =
+  '//*[@id="fullScreen"]/div[2]/div[2]/div[1]/ng-select';
+const SEMESTER_COMBO_BOX_TUAN_XPATH =
   "/html/body/app-root[1]/div/div/div/div[1]/div/div/div[1]/app-thoikhoabieu-tuan/div[1]/div[2]/div[1]/div[1]/ng-select/div/div";
-const SEMESTER_DROP_DOWN_SELECTOR = ".ng-option";
-const SEMESTER_TABLE_COMBO_BOX_XPATH =
+const SEMESTER_COMBO_BOX_HK_XPATH =
   "/html/body/app-root[1]/div/div/div/div[1]/div/div/div[1]/app-tkb-hocky/div/div[2]/div[1]/div/ng-select/div";
-
+const DROP_DOWN_ITEM_SELECTOR = ".ng-option";
 const STUDENT_CODE_XPATH =
   "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[2]/div[1]/div[2]"; // Mã sinh viên
 const STUDENT_NAME_XPATH =
@@ -114,6 +113,8 @@ export class WebScraper {
     }
   }
 
+  // Đăng nhập vào trang đào tạo VNUA
+  // Trả về Page và BrowserSession để sử dụng sau này
   async loginWeb(
     studentCode: string,
     password: string
@@ -151,6 +152,8 @@ export class WebScraper {
     }
   }
 
+  // Xác thực thông tin đăng nhập của sinh viên trên trang đào tạo
+  // Trả về thông tin người dùng nếu đăng nhập thành công
   async verifyStudentLoginOnWeb(
     studentCode: string,
     password: string
@@ -179,6 +182,8 @@ export class WebScraper {
     }
   }
 
+  // Lấy thông tin sinh viên từ trang đào tạo
+  // Trả về một đối tượng User chứa thông tin sinh viên
   async fetchStudentInfoOnWeb(page: Page): Promise<User> {
     try {
       console.log("Bắt đầu lấy thông tin sinh viên từ trang đào tạo");
@@ -329,80 +334,43 @@ export class WebScraper {
     }
   }
 
-  async waitForElementSelector(page: Page, selector: string) {
-    try {
-      await page.waitForSelector(selector, {
-        timeout: TIMEOUT,
-        state: "visible",
-      });
-    } catch (e) {
-      throw new Error(`Không thể lấy thông tin người dùng`);
-    }
-  }
-
-  async redirectToStudentInforPage(page: Page) {
-    try {
-      await page.waitForSelector(`xpath=${LINK_BUTTON_THONG_TIN_SINH_VIEN}`, {
-        timeout: TIMEOUT,
-        state: "visible",
-      });
-      await page.click(`xpath=${LINK_BUTTON_THONG_TIN_SINH_VIEN}`);
-      await this.waitForPageLoad(page);
-    } catch (e) {
-      throw new Error(
-        "Không thể lấy thông tin sinh viên, vui lòng thử lại sau"
-      );
-    }
-  }
-
-  async fetchScheduleOnWeb(
+  // Lấy thời khóa biểu của sinh viên của tất cả học kỳ hiện có
+  // Trả về 1 mảng một đối tượng Schedule chứa thông tin thời khóa biểu
+  async fetchSchedulesOnWeb(
     studentCode: string,
-    password: string,
-    semesterCode: string
-  ): Promise<Schedule> {
+    password: string
+  ): Promise<Schedule[]> {
     let page: Page | null = null;
     let session: BrowserSession | null = null;
+    const schedules: Schedule[] = [];
 
     try {
       const loginResult = await this.loginWeb(studentCode, password);
       page = loginResult.page;
       session = loginResult.session;
 
-      const fullSemesterText = this.convertSemesterCode(semesterCode);
-
       await this.redirectToWeekSchedulePage(page);
+      const semesters: string[] = await this.fetchSemesterNames(page);
+      let schedule: Schedule;
 
-      await page.click(`xpath=${SEMESTER_COMBO_BOX_XPATH}`);
-      await this.waitForPageLoad(page);
+      for (const semester of semesters) {
+        schedule = new Schedule();
+        schedule.setSemesterString(semester);
+        schedule.setSemesterStartDate(
+          (await this.fetchStartDateOfTerm(page, semester)) || ""
+        );
 
-      const schedule = new Schedule();
+        const html = await this.fetchTableSchedule(page, semester);
+        const scheduleParser = new TimeTableParser(
+          schedule.getSemesterStartDate()
+        );
+        const timeTable = scheduleParser.getTimeTable(html);
+        schedule.setTimeTable(timeTable);
 
-      const semesterList = await page.$$(SEMESTER_DROP_DOWN_SELECTOR);
-      let semesterIndex = 0;
-      for (const [i, element] of semesterList.entries()) {
-        const text = (await element.innerText()).trim();
-        if (fullSemesterText.toLowerCase() === text.toLowerCase()) {
-          schedule.semesterString = text;
-          await element.click();
-          semesterIndex = i;
-          break;
-        }
+        schedules.push(schedule);
       }
 
-      await this.waitForPageLoad(page);
-      const date = await this.fetchStartDateOfTerm(page);
-      if (!date) {
-        throw new Error("Không thể lấy ngày bắt đầu học kỳ");
-      }
-      schedule.semesterStartDate = date;
-
-      const html = await this.fetchTableSchedule(page, semesterIndex);
-
-      const scheduleParser = new ScheduleParser(schedule.semesterStartDate);
-      const schedules = scheduleParser.getSchedule(html);
-      schedule.schedules = schedules;
-
-      return schedule;
+      return schedules;
     } catch (e) {
       if (e.message.includes("Thông tin đăng nhập")) {
         throw e;
@@ -418,75 +386,58 @@ export class WebScraper {
     }
   }
 
-  async redirectToWeekSchedulePage(page: Page) {
+  // Lấy danh sách tên học kỳ từ trang thời khóa biểu
+  // Trả về một mảng chứa tên các học kỳ
+  async fetchSemesterNames(page: Page): Promise<string[]> {
     try {
-      await page.waitForSelector(`xpath=${LINK_BUTTON_TKB_TUAN}`, {
-        timeout: TIMEOUT,
-        state: "visible",
-      });
-      await page.click(`xpath=${LINK_BUTTON_TKB_TUAN}`);
-      await this.waitForPageLoad(page);
-    } catch (e) {
-      throw new Error(
-        "Không thể lấy thông tin thời khóa biểu, vui lòng thử lại sau"
-      );
-    }
-  }
-
-  async redirectToSemesterSchedulePage(page: Page) {
-    try {
-      await page.waitForSelector(`xpath=${LINK_BUTTON_TKB_HK}`, {
-        timeout: TIMEOUT,
-        state: "visible",
-      });
-      await page.click(`xpath=${LINK_BUTTON_TKB_HK}`);
-      await this.waitForPageLoad(page);
-    } catch (e) {
-      throw new Error(
-        "Không thể lấy thông tin thời khóa biểu, vui lòng thử lại sau"
-      );
-    }
-  }
-
-  async fetchSemesterNames(
-    studentCode: string,
-    password: string
-  ): Promise<string[]> {
-    let page: Page | null = null;
-    let session: BrowserSession | null = null;
-    try {
-      const loginResult = await this.loginWeb(studentCode, password);
-      page = loginResult.page;
-      session = loginResult.session;
-
-      await this.redirectToSemesterSchedulePage(page);
-      await this.waitForPageLoad(page);
-
-      await page.click(`xpath=${SEMESTER_TABLE_COMBO_BOX_XPATH}`);
+      await page.click(`xpath=${SEMESTER_COMBO_BOX_TUAN_XPATH}`);
       await this.waitForPageLoad(page);
       await page.waitForTimeout(2000);
 
-      const semesterElements = await page.$$(SEMESTER_DROP_DOWN_SELECTOR);
+      const semesterElements = await page.$$(DROP_DOWN_ITEM_SELECTOR);
       if (semesterElements.length === 0) {
         throw new Error("Không tìm thấy học kỳ nào trong combo box");
       }
+
       const semesterNames: string[] = [];
       for (const element of semesterElements) {
         const text = (await element.innerText()).trim();
         semesterNames.push(text);
       }
-      console.log("Danh sách học kỳ:", semesterNames);
+
       return semesterNames;
-    } finally {
-      if (page) await page.close();
-      if (session) await this.cleanupBrowserSession(session);
+    } catch (e) {
+      throw new Error("Không thể lấy danh sách học kỳ");
     }
   }
 
-  async fetchStartDateOfTerm(page: Page): Promise<string | null> {
+  // Lấy ngày bắt đầu của học kỳ từ trang thời khóa biểu
+  // Trả về ngày bắt đầu học kỳ dưới dạng chuỗi "YYYY-MM-DD"
+  async fetchStartDateOfTerm(
+    page: Page,
+    semester: string
+  ): Promise<string | null> {
     try {
+      await this.redirectToWeekSchedulePage(page);
+
+      if (semester) {
+        await page.click(`xpath=${SEMESTER_COMBO_BOX_TUAN_XPATH}`);
+        await this.waitForPageLoad(page);
+        await page.waitForTimeout(2000);
+
+        const semesterList = await page.$$(DROP_DOWN_ITEM_SELECTOR);
+        for (const element of semesterList) {
+          const text = (await element.innerText()).trim();
+          if (semester.toLowerCase() === text.toLowerCase()) {
+            await element.click();
+            await this.waitForPageLoad(page);
+            break;
+          }
+        }
+      }
+
       await page.waitForTimeout(2000);
-      await page.click(`xpath=${COMBO_BOX_XPATH}`);
+      await page.click(`xpath=${WEEK_COMBO_BOX_XPATH}`);
       await this.waitForPageLoad(page);
 
       const weeks = await page.$$(DROP_DOWN_ITEM_SELECTOR);
@@ -504,11 +455,9 @@ export class WebScraper {
       if (!currentWeekDate)
         throw new Error("Không thể phân tích ngày từ: " + weekText);
 
-      // Tính ngày bắt đầu học kỳ
       const result = new Date(currentWeekDate);
       result.setDate(result.getDate() - (weekNumber - 1) * 7);
 
-      // Trả về dạng YYYY-MM-DD (không bị lệch múi giờ)
       const yyyy = result.getFullYear();
       const mm = String(result.getMonth() + 1).padStart(2, "0");
       const dd = String(result.getDate()).padStart(2, "0");
@@ -518,19 +467,29 @@ export class WebScraper {
     }
   }
 
-  async fetchTableSchedule(page: Page, semesterIndex: number): Promise<string> {
+  // Lấy bảng thời khóa biểu của học kỳ
+  // Trả về nội dung HTML của bảng thời khóa biểu
+  async fetchTableSchedule(page: Page, semester: string): Promise<string> {
+    await this.redirectToSemesterSchedulePage(page);
+
     try {
-      await this.redirectToSemesterSchedulePage(page);
-      await this.waitForPageLoad(page);
+      // Nếu có semester được chỉ định, chọn semester đó trước
+      if (semester) {
+        await page.click(`xpath=${SEMESTER_COMBO_BOX_HK_XPATH}`);
+        await this.waitForPageLoad(page);
+        await page.waitForTimeout(2000);
 
-      await page.click(`xpath=${SEMESTER_TABLE_COMBO_BOX_XPATH}`);
-      await this.waitForPageLoad(page);
-      await page.waitForTimeout(2000);
-
-      const semesters = await page.$$(SEMESTER_DROP_DOWN_SELECTOR);
-      await semesters[semesterIndex].click();
-      await this.waitForPageLoad(page);
-      await page.waitForTimeout(5000);
+        const semesterList = await page.$$(DROP_DOWN_ITEM_SELECTOR);
+        for (const element of semesterList) {
+          const text = (await element.innerText()).trim();
+          if (semester.toLowerCase() === text.toLowerCase()) {
+            await element.click();
+            await this.waitForPageLoad(page);
+            await page.waitForTimeout(2000);
+            break;
+          }
+        }
+      }
 
       return await page.content();
     } catch (e) {
@@ -538,14 +497,72 @@ export class WebScraper {
     }
   }
 
-  convertSemesterCode(semesterCode: string): string {
-    if (!semesterCode || semesterCode.length !== 9) return "";
-    const hocKy = semesterCode.substring(0, 1);
-    const namBatDau = semesterCode.substring(1, 5);
-    const namKetThuc = semesterCode.substring(5, 9);
-    return `Học kỳ ${hocKy} - Năm học ${namBatDau} - ${namKetThuc}`;
+  // Chờ đợi một phần tử có selector nhất định xuất hiện trên trang
+  // Nếu không tìm thấy trong thời gian timeout, sẽ ném ra lỗi
+  async waitForElementSelector(page: Page, selector: string) {
+    try {
+      await page.waitForSelector(selector, {
+        timeout: TIMEOUT,
+        state: "visible",
+      });
+    } catch (e) {
+      throw new Error(`Không thể lấy thông tin người dùng`);
+    }
   }
 
+  // Chuyển hướng đến trang thông tin sinh viên
+  // Nếu không thể tìm thấy phần tử, sẽ ném ra lỗi
+  async redirectToStudentInforPage(page: Page) {
+    try {
+      await page.waitForSelector(`xpath=${LINK_BUTTON_THONG_TIN_SINH_VIEN}`, {
+        timeout: TIMEOUT,
+        state: "visible",
+      });
+      await page.click(`xpath=${LINK_BUTTON_THONG_TIN_SINH_VIEN}`);
+      await this.waitForPageLoad(page);
+    } catch (e) {
+      throw new Error(
+        "Không thể lấy thông tin sinh viên, vui lòng thử lại sau"
+      );
+    }
+  }
+
+  // Chuyển hướng đến trang thời khóa biểu theo tuần
+  // Nếu không thể tìm thấy phần tử, sẽ ném ra lỗi
+  async redirectToWeekSchedulePage(page: Page) {
+    try {
+      await page.waitForSelector(`xpath=${LINK_BUTTON_TKB_TUAN}`, {
+        timeout: TIMEOUT,
+        state: "visible",
+      });
+      await page.click(`xpath=${LINK_BUTTON_TKB_TUAN}`);
+      await this.waitForPageLoad(page);
+    } catch (e) {
+      throw new Error(
+        "Không thể lấy thông tin thời khóa biểu, vui lòng thử lại sau"
+      );
+    }
+  }
+
+  // Chuyển hướng đến trang thời khóa biểu theo học kỳ
+  // Nếu không thể tìm thấy phần tử, sẽ ném ra lỗi
+  async redirectToSemesterSchedulePage(page: Page) {
+    try {
+      await page.waitForSelector(`xpath=${LINK_BUTTON_TKB_HK}`, {
+        timeout: TIMEOUT,
+        state: "visible",
+      });
+      await page.click(`xpath=${LINK_BUTTON_TKB_HK}`);
+      await this.waitForPageLoad(page);
+    } catch (e) {
+      throw new Error(
+        "Không thể lấy thông tin thời khóa biểu, vui lòng thử lại sau"
+      );
+    }
+  }
+
+  // Phân tích chuỗi ngày tháng trong định dạng "Ngày X tháng Y năm Z" nằm trong dấu ngoặc vuông
+  // Ví dụ: "Lịch học [01/09/2023]" sẽ trả về ngày 01/09/2023
   parseStringToDate(dateString: string): Date | null {
     if (!dateString || !dateString.includes("[")) return null;
     const startIndex = dateString.indexOf("[");
@@ -562,6 +579,8 @@ export class WebScraper {
     return null;
   }
 
+  // Chờ đợi trang tải xong với trạng thái "networkidle"
+  // Điều này đảm bảo rằng tất cả các tài nguyên đã được tải xong
   async waitForPageLoad(page: Page) {
     await page.waitForLoadState("networkidle");
   }
@@ -578,14 +597,9 @@ export class WebScraperStatic {
 
   static async fetchScheduleOnWeb(
     studentCode: string,
-    password: string,
-    semesterCode: string
-  ): Promise<Schedule> {
+    password: string
+  ): Promise<Schedule[]> {
     const scraper = new WebScraper();
-    return await scraper.fetchScheduleOnWeb(
-      studentCode,
-      password,
-      semesterCode
-    );
+    return await scraper.fetchSchedulesOnWeb(studentCode, password);
   }
 }

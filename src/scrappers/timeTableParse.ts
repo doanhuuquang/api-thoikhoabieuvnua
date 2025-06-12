@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import { Subject } from "../models/Subject";
 
-export class ScheduleParser {
+export class TimeTableParser {
   private semesterStartDate: string;
 
   constructor(semesterStartDate: string) {
@@ -12,7 +12,7 @@ export class ScheduleParser {
     return cheerio.load(html);
   }
 
-  getSchedule(html: string): Map<string, Subject[]> {
+  getTimeTable(html: string): Map<string, Subject[]> {
     const schedules = new Map<string, Subject[]>();
     const $ = this.parseHtmlToDocument(html);
 

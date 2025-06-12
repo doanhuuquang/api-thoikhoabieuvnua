@@ -3,11 +3,10 @@ import { Subject } from "./Subject";
 export class Schedule {
   semesterString: string;
   semesterStartDate: string;
-  schedules: Map<string, Subject[]>;
-  schedule: { [k: string]: Subject[]; };
+  timeTable: Map<string, Subject[]>;
 
   constructor() {
-    this.schedules = new Map<string, Subject[]>();
+    this.timeTable = new Map<string, Subject[]>();
   }
 
   public getSemesterString(): string {
@@ -26,11 +25,11 @@ export class Schedule {
     this.semesterStartDate = value;
   }
 
-  public getSchedules(): Map<string, Subject[]> {
-    return this.schedules;
+  public getTimeTable(): Map<string, Subject[]> {
+    return this.timeTable;
   }
 
-  public setSchedules(value: Map<string, Subject[]>): void {
-    this.schedules = value;
+  public setTimeTable(value: Map<string, Subject[]>): void {
+    this.timeTable = value;
   }
 }

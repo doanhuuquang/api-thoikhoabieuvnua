@@ -6,27 +6,14 @@ import { IScheduleService } from "./IScheduleService";
 export class ScheduleService implements IScheduleService {
   constructor() {}
 
-  async getSchedule(userDTO: UserDTO, semesterCode: string): Promise<Schedule> {
+  async getSchedule(userDTO: UserDTO): Promise<Schedule[]> {
     const webScraper = new WebScraper();
 
     const { studentCode, password } = userDTO;
-    const schedule = await webScraper.fetchScheduleOnWeb(
-      studentCode,
-      password,
-      semesterCode
-    );
-    return schedule;
-  }
-
-  async getSemesterList(userDTO: UserDTO): Promise<string[]> {
-    const webScraper = new WebScraper();
-
-    const { studentCode, password } = userDTO;
-    const semesterNames: string[] = await webScraper.fetchSemesterNames(
+    const schedule = await webScraper.fetchSchedulesOnWeb(
       studentCode,
       password
     );
-
-    return semesterNames;
+    return schedule;
   }
 }
