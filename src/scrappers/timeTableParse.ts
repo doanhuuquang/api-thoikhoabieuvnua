@@ -34,7 +34,7 @@ export class TimeTableParser {
 
       const day = this.getDayOfWeek($, table, rowIndex);
 
-      if (!day || !subject) continue;
+      if (day === null || !subject) continue;
 
       let weekCount = 1;
       for (const c of weekString) {
@@ -78,14 +78,14 @@ export class TimeTableParser {
 
     if (cols.length === 0) return null;
 
-    let thu: string;
+    let dayOfWeekStr: string;
     if (cols.length < 7) {
-      thu = $(cols[0]).text();
+      dayOfWeekStr = $(cols[0]).text();
     } else {
-      thu = $(cols[5]).text();
+      dayOfWeekStr = $(cols[5]).text();
     }
 
-    return this.getDayOfWeekFromString(thu);
+    return this.getDayOfWeekFromString(dayOfWeekStr);
   }
 
   private getSubject(
@@ -151,31 +151,32 @@ export class TimeTableParser {
   }
 
   // 0=Sunday, 1=Monday, ..., 6=Saturday
-  public getDayOfWeekFromString(str: string): number | null {
-    switch (str.toUpperCase()) {
-      case "2":
-        return 1;
-      case "3":
-        return 2;
-      case "4":
-        return 3;
-      case "5":
-        return 4;
-      case "6":
-        return 5;
-      case "7":
-        return 6;
-      case "CN":
-        return 0;
-      default:
-        return null;
-    }
+  public getDayOfWeekFromString(dayOfWeekStr: string): number | null {
+    const s = dayOfWeekStr.trim().toUpperCase();
+    if (s === "CN") return 0;
+    if (s === "2") return 1;
+    if (s === "3") return 2;
+    if (s === "4") return 3;
+    if (s === "5") return 4;
+    if (s === "6") return 5;
+    if (s === "7") return 6;
+    return null;
   }
 
-  private getDateOfWeek(date: Date, dayOfWeek: number): Date {
-    // JS: 0=Sunday, 1=Monday, ..., 6=Saturday
-    const result = new Date(date);
-    result.setDate(result.getDate() + ((dayOfWeek - result.getDay() + 7) % 7));
+  private getDateOfWeek(weekStartDate: Date, dayOfWeek: number): Date {
+    const result = new Date(weekStartDate);
+
+    // Tính ngày đầu tuần (Thứ 2)
+    const currentDayOfWeek = weekStartDate.getDay();
+    const daysToMonday = currentDayOfWeek === 0 ? -6 : 1 - currentDayOfWeek;
+
+    // Chuyển về Thứ 2
+    result.setDate(result.getDate() + daysToMonday);
+
+    // Thêm số ngày để đến ngày cần thiết
+    const daysToAdd = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    result.setDate(result.getDate() + daysToAdd);
+
     return result;
   }
 

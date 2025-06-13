@@ -20,10 +20,21 @@ export const getSchedule = async (
 
     const userDTO: UserDTO = new UserDTO(studentCode, password);
     let schedules: Schedule[] = await scheduleService.getSchedule(userDTO);
-    const result = schedules.map((sch) => ({
-      ...sch,
-      timeTable: sch.timeTable ? Object.fromEntries(sch.timeTable) : {},
-    }));
+    const result = schedules.map((sch) => {
+      let sortedTimeTable = {};
+      if (sch.timeTable && typeof sch.timeTable.entries === "function") {
+        sortedTimeTable = Object.fromEntries(
+          Array.from(sch.timeTable.entries()).sort(
+            ([dateA], [dateB]) =>
+              new Date(dateA).getTime() - new Date(dateB).getTime()
+          )
+        );
+      }
+      return {
+        ...sch,
+        timeTable: sortedTimeTable,
+      };
+    });
     res.json(result);
     return;
   } catch (err) {
