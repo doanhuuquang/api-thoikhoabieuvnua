@@ -150,7 +150,6 @@ export class TimeTableParser {
     }
   }
 
-  // 0=Sunday, 1=Monday, ..., 6=Saturday
   public getDayOfWeekFromString(dayOfWeekStr: string): number | null {
     const s = dayOfWeekStr.trim().toUpperCase();
     if (s === "CN") return 0;

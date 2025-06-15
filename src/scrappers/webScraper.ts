@@ -5,6 +5,7 @@ import { TimeTableParser } from "./timeTableParse";
 
 const URL_DAO_TAO_VNUA = "https://daotao.vnua.edu.vn/";
 
+// Các selector cho các nút chức năng
 const LINK_BUTTON_TKB_TUAN =
   "/html/body/app-root/div/div/div/div[1]/div/div/div[2]/app-right/app-chucnang/div/div[2]/ul[9]/li/div[1]/a[1]";
 const LINK_BUTTON_TKB_HK =
@@ -12,12 +13,14 @@ const LINK_BUTTON_TKB_HK =
 const LINK_BUTTON_THONG_TIN_SINH_VIEN =
   "/html/body/app-root/div/div/div/div[1]/div/div/div[2]/app-right/app-chucnang/div/div[2]/ul[16]/li/div[1]/a[1]";
 
+// Các selector cho các trường đăng nhập
 const USER_NAME_INPUT = "input[name='username']";
 const PASSWORD_INPUT = "input[name='password']";
 const LOGIN_BUTTON = "button:has-text('Đăng nhập')";
 const USER_NAME_LOGGED =
   "/html/body/app-root[1]/div/div/div/div[1]/div/div/div[2]/app-right/app-login/div/div[2]/div[1]/table/tr[2]/td[2]/span";
 
+// Xpath của các trường thông tin thời khóa biểu
 const WEEK_COMBO_BOX_XPATH =
   '//*[@id="fullScreen"]/div[2]/div[2]/div[1]/ng-select';
 const SEMESTER_COMBO_BOX_TUAN_XPATH =
@@ -25,6 +28,8 @@ const SEMESTER_COMBO_BOX_TUAN_XPATH =
 const SEMESTER_COMBO_BOX_HK_XPATH =
   "/html/body/app-root[1]/div/div/div/div[1]/div/div/div[1]/app-tkb-hocky/div/div[2]/div[1]/div/ng-select/div";
 const DROP_DOWN_ITEM_SELECTOR = ".ng-option";
+
+// Xpath của các trường thông tin sinh viên
 const STUDENT_CODE_XPATH =
   "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[1]/div/div[2]/div[1]/div[2]"; // Mã sinh viên
 const STUDENT_NAME_XPATH =
@@ -64,7 +69,7 @@ const STUDENT_ETHNICITY_XPATH =
 const STUDENT_BANK_ACCOUNT_NUMBER_XPATH =
   "/html/body/app-root/div/div/div/div[1]/div/div/div[1]/app-lylich-main/div/mat-horizontal-stepper/div/div[2]/div[1]/app-tt-lylich/div[2]/div[7]/div[3]/input"; // Số tài khoản ngân hàng
 
-const HEADLESS_MODE = true;
+const HEADLESS_MODE = false;
 const TIMEOUT = 10000;
 
 interface BrowserSession {
@@ -77,13 +82,13 @@ export class WebScraper {
     const browser = await chromium.launch({
       headless: HEADLESS_MODE,
       args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-gpu",
-        "--no-first-run",
-        "--no-zygote",
-        "--single-process",
+        // "--no-sandbox",
+        // "--disable-setuid-sandbox",
+        // "--disable-dev-shm-usage",
+        // "--disable-gpu",
+        // "--no-first-run",
+        // "--no-zygote",
+        // "--single-process",
       ],
     });
 
@@ -353,7 +358,7 @@ export class WebScraper {
       const semesters: string[] = await this.fetchSemesterNames(page);
       let schedule: Schedule;
 
-      for (const semester of semesters) {
+      for (const semester of semesters.slice(0, 4)) {
         schedule = new Schedule();
         schedule.setSemesterString(semester);
         schedule.setSemesterStartDate(
