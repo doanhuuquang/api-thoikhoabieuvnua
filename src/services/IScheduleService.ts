@@ -1,6 +1,8 @@
-import { Schedule } from "../models/Schedule";
+import { TimeTableSchedule } from "../models/TimeTableSchedule";
 import { UserDTO } from "../DTOs/UserDTO";
+import { ExamSchedule } from "../models/ExamSchedule";
 
 export interface IScheduleService {
-  getSchedule(userDTO: UserDTO): Promise<Schedule[]>;
+  getTimeTableSchedules(userDTO: UserDTO): Promise<TimeTableSchedule[]>;
+  getExamSchedules(userDTO: UserDTO): Promise<ExamSchedule[]>;
 }

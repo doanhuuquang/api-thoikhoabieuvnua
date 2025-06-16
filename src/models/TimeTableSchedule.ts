@@ -1,12 +1,12 @@
 import { Subject } from "./Subject";
 
-export class Schedule {
+export class TimeTableSchedule {
   semesterString: string;
   semesterStartDate: string;
-  timeTable: Map<string, Subject[]>;
+  schedule: Map<string, Subject[]>;
 
   constructor() {
-    this.timeTable = new Map<string, Subject[]>();
+    this.schedule = new Map<string, Subject[]>();
   }
 
   public getSemesterString(): string {
@@ -25,11 +25,11 @@ export class Schedule {
     this.semesterStartDate = value;
   }
 
-  public getTimeTable(): Map<string, Subject[]> {
-    return this.timeTable;
+  public getSchedule(): Map<string, Subject[]> {
+    return this.schedule;
   }
 
-  public setTimeTable(value: Map<string, Subject[]>): void {
-    this.timeTable = value;
+  public setSchedule(value: Map<string, Subject[]>): void {
+    this.schedule = value;
   }
 }

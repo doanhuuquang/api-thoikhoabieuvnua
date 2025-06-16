@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import { Subject } from "../models/Subject";
 
-export class TimeTableParser {
+export class TimeTableScheduleParse {
   private semesterStartDate: string;
 
   constructor(semesterStartDate: string) {
@@ -13,26 +13,26 @@ export class TimeTableParser {
   }
 
   getTimeTable(html: string): Map<string, Subject[]> {
-    const schedules = new Map<string, Subject[]>();
-    const $ = this.parseHtmlToDocument(html);
+    const TimeTables = new Map<string, Subject[]>();
+    const document = this.parseHtmlToDocument(html);
 
-    const table = $("tbody").first();
+    const table = document("tbody").first();
     const rows = table.find("tr").toArray();
 
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       const row = rows[rowIndex];
-      let cols = $(row)
+      let cols = document(row)
         .find("td")
         .toArray()
-        .filter((col) => !$(col).hasClass("d-none"));
+        .filter((col) => !document(col).hasClass("d-none"));
 
       if (cols.length === 0) continue;
 
-      const subject = this.getSubject($, table, rowIndex);
+      const subject = this.getSubject(document, table, rowIndex);
 
-      const weekString = $(cols[cols.length - 1]).text();
+      const weekString = document(cols[cols.length - 1]).text();
 
-      const day = this.getDayOfWeek($, table, rowIndex);
+      const day = this.getDayOfWeek(document, table, rowIndex);
 
       if (day === null || !subject) continue;
 
@@ -44,7 +44,7 @@ export class TimeTableParser {
           const subjectDate = this.getDateOfWeek(weekStart, day);
 
           const key = subjectDate.toISOString().slice(0, 10);
-          if (!schedules.has(key)) schedules.set(key, []);
+          if (!TimeTables.has(key)) TimeTables.set(key, []);
           const subjectCopy = new Subject(
             subject.code,
             subject.name,
@@ -57,16 +57,16 @@ export class TimeTableParser {
             subject.lecturerName,
             subjectDate.toISOString().slice(0, 10)
           );
-          schedules.get(key)!.push(subjectCopy);
+          TimeTables.get(key)!.push(subjectCopy);
         }
         weekCount++;
       }
     }
-    return schedules;
+    return TimeTables;
   }
 
   private getDayOfWeek(
-    $: cheerio.CheerioAPI,
+    document: cheerio.CheerioAPI,
     table: any,
     rowIndex: number
   ): number | null {
@@ -74,22 +74,22 @@ export class TimeTableParser {
     let cols = row
       .find("td")
       .toArray()
-      .filter((col: any) => !$(col).hasClass("d-none"));
+      .filter((col: any) => !document(col).hasClass("d-none"));
 
     if (cols.length === 0) return null;
 
     let dayOfWeekStr: string;
     if (cols.length < 7) {
-      dayOfWeekStr = $(cols[0]).text();
+      dayOfWeekStr = document(cols[0]).text();
     } else {
-      dayOfWeekStr = $(cols[5]).text();
+      dayOfWeekStr = document(cols[5]).text();
     }
 
     return this.getDayOfWeekFromString(dayOfWeekStr);
   }
 
   private getSubject(
-    $: cheerio.CheerioAPI,
+    document: cheerio.CheerioAPI,
     table: any,
     rowIndex: number
   ): Subject | null {
@@ -98,7 +98,7 @@ export class TimeTableParser {
       let cols = row
         .find("td")
         .toArray()
-        .filter((col: any) => !$(col).hasClass("d-none"));
+        .filter((col: any) => !document(col).hasClass("d-none"));
 
       if (cols.length === 0) return null;
 
@@ -110,37 +110,43 @@ export class TimeTableParser {
           let parentCols = rowParent
             .find("td")
             .toArray()
-            .filter((col: any) => !$(col).hasClass("d-none"));
+            .filter((col: any) => !document(col).hasClass("d-none"));
           const hasRowspan = parentCols.some((td: any) =>
-            $(td).attr("rowspan")
+            document(td).attr("rowspan")
           );
           if (hasRowspan && parentCols.length > 0) {
-            subject.code = $(parentCols[0]).text().trim();
-            subject.name = $(parentCols[1]).text().trim();
-            subject.group = $(parentCols[2]).text().trim();
-            subject.credit = this.safeParseInt($(parentCols[3]).text().trim());
-            subject.classCode = $(parentCols[4]).text().trim();
+            subject.code = document(parentCols[0]).text().trim();
+            subject.name = document(parentCols[1]).text().trim();
+            subject.group = document(parentCols[2]).text().trim();
+            subject.credit = this.safeParseInt(
+              document(parentCols[3]).text().trim()
+            );
+            subject.classCode = document(parentCols[4]).text().trim();
             break;
           }
         }
         if (cols.length > 4) {
-          subject.start = this.safeParseInt($(cols[1]).text().trim());
-          subject.numberOfLessons = this.safeParseInt($(cols[2]).text().trim());
-          subject.room = $(cols[3]).text().trim();
-          const lecturerName = $(cols[4]).text().trim();
+          subject.start = this.safeParseInt(document(cols[1]).text().trim());
+          subject.numberOfLessons = this.safeParseInt(
+            document(cols[2]).text().trim()
+          );
+          subject.room = document(cols[3]).text().trim();
+          const lecturerName = document(cols[4]).text().trim();
           subject.lecturerName =
             lecturerName !== "" ? lecturerName : "Đang cập nhật";
         }
       } else if (cols.length >= 10) {
-        subject.code = $(cols[0]).text().trim();
-        subject.name = $(cols[1]).text().trim();
-        subject.group = $(cols[2]).text().trim();
-        subject.credit = this.safeParseInt($(cols[3]).text().trim());
-        subject.classCode = $(cols[4]).text().trim();
-        subject.start = this.safeParseInt($(cols[6]).text().trim());
-        subject.numberOfLessons = this.safeParseInt($(cols[7]).text().trim());
-        subject.room = $(cols[8]).text().trim();
-        const lecturerName = $(cols[9]).text().trim();
+        subject.code = document(cols[0]).text().trim();
+        subject.name = document(cols[1]).text().trim();
+        subject.group = document(cols[2]).text().trim();
+        subject.credit = this.safeParseInt(document(cols[3]).text().trim());
+        subject.classCode = document(cols[4]).text().trim();
+        subject.start = this.safeParseInt(document(cols[6]).text().trim());
+        subject.numberOfLessons = this.safeParseInt(
+          document(cols[7]).text().trim()
+        );
+        subject.room = document(cols[8]).text().trim();
+        const lecturerName = document(cols[9]).text().trim();
         subject.lecturerName =
           lecturerName !== "" ? lecturerName : "Đang cập nhật";
       }

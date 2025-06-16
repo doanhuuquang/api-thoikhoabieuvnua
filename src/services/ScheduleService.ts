@@ -1,19 +1,31 @@
 import { UserDTO } from "../DTOs/UserDTO";
-import { Schedule } from "../models/Schedule";
+import { ExamSchedule } from "../models/ExamSchedule";
+import { TimeTableSchedule } from "../models/TimeTableSchedule";
 import { WebScraper } from "../scrappers/webScraper";
 import { IScheduleService } from "./IScheduleService";
 
 export class ScheduleService implements IScheduleService {
   constructor() {}
 
-  async getSchedule(userDTO: UserDTO): Promise<Schedule[]> {
+  async getTimeTableSchedules(userDTO: UserDTO): Promise<TimeTableSchedule[]> {
     const webScraper = new WebScraper();
 
     const { studentCode, password } = userDTO;
-    const schedule = await webScraper.fetchSchedulesOnWeb(
+    const timeTableSchedules = await webScraper.fetchTimeTableSchedulesOnWeb(
       studentCode,
       password
     );
-    return schedule;
+    return timeTableSchedules;
+  }
+
+  async getExamSchedules(userDTO: UserDTO): Promise<ExamSchedule[]> {
+    const webScraper = new WebScraper();
+
+    const { studentCode, password } = userDTO;
+    const examSchedules = await webScraper.fetchExamSchedulesOnWeb(
+      studentCode,
+      password
+    );
+    return examSchedules;
   }
 }
