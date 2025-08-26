@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite-node ./src/app.ts",
-    "postinstall": "npx playwright install --with-deps"
+    "postinstall": "npx playwright install chromium"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +26,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
-    "playwright": "^1.52.0",
+    "playwright": "^1.55.0",
     "vite-plugin-node": "^5.0.1"
   }
 }
